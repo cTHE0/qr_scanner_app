@@ -3,43 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Scanner QR codes theocourbe.com">
-    <title>QR Scanner — theocourbe.com</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>QR Scanner — theocouerbe.com</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; color: #1e293b; max-width: 600px; margin: 0 auto; }
-        .container { display: flex; flex-direction: column; gap: 20px; }
-        header { text-align: center; padding: 20px 0; }
-        h1 { font-size: 2.5rem; margin-bottom: 10px; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { color: #64748b; font-size: 1.1rem; }
-        .camera-container { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        #video { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .scan-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .scan-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 200px; height: 200px; border: 3px solid #2563eb; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); }
-        .scan-line { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 220px; height: 4px; background: #2563eb; border-radius: 2px; animation: scan 2s infinite linear; }
-        @keyframes scan { 0% { top: 20%; } 100% { top: 80%; } }
-        .controls { display: flex; flex-direction: column; gap: 12px; }
-        .btn { padding: 14px 24px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn.primary { background: #2563eb; color: white; }
-        .btn.primary:hover { background: #1d4ed8; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
-        .btn.secondary { background: #64748b; color: white; }
-        .btn.secondary:hover { background: #475569; transform: translateY(-2px); }
-        .btn.tertiary { background: white; color: #1e293b; border: 2px solid #e2e8f0; }
-        .btn.tertiary:hover { background: #f1f5f9; border-color: #64748b; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .result, .error { padding: 20px; border-radius: 12px; animation: fadeIn 0.3s ease; }
-        .result { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-        .error { background: #fee2e2; color: #ef4444; border: 2px solid #ef4444; }
-        .result.hidden, .error.hidden { display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .result-content { display: flex; flex-direction: column; gap: 12px; }
-        .url { background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 0.9rem; }
-        .result-actions { display: flex; gap: 12px; margin-top: 12px; }
-        .result-actions .btn { flex: 1; }
-        footer { text-align: center; padding: 20px 0; color: #64748b; font-size: 0.9rem; border-top: 2px solid #e2e8f0; margin-top: 10px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            width: 200px;
+            height: 200px;
+            border: 3px solid #2563eb;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+        }
+        .scan-line {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            width: 220px;
+            height: 4px;
+            background: #2563eb;
+            border-radius: 2px;
+            animation: scan 2s infinite linear;
+        }
+        @keyframes scan {
+            0% { top: 20%; }
+            100% { top: 80%; }
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn.primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn.primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+        .btn.secondary {
+            background: #64748b;
+            color: white;
+        }
+        .btn.secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+        .btn.tertiary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+        .btn.tertiary:hover {
+            background: #f1f5f9;
+            border-color: #64748b;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result, .error {
+            padding: 20px;
+            border-radius: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        .result {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .error {
+            background: #fee2e2;
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+        .result.hidden, .error.hidden {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .url {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .result-actions .btn {
+            flex: 1;
+        }
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 2px solid #e2e8f0;
+            margin-top: 10px;
+        }
         @media (max-width: 480px) {
             body { padding: 10px; }
             h1 { font-size: 2rem; }
@@ -84,220 +228,170 @@
         <div id="error-container" class="error hidden"></div>
 
         <footer>
-            <p>🔒 Seuls les sites sur <strong>theocourbe.com</strong> sont autorisés</p>
+            <p>🔒 Seuls les sites sur <strong>theocouerbe.com</strong> sont autorisés</p>
         </footer>
     </div>
 
-    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/zxing-browser.min.js"></script>
+    <!-- Script ZXing chargé de manière non-bloquante -->
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/zxing-browser.min.js" defer></script>
+    
     <script>
-        class QRScannerApp {
-            constructor() {
-                this.codeReader = null;
-                this.videoElement = document.getElementById('video');
-                this.startBtn = document.getElementById('start-btn');
-                this.stopBtn = document.getElementById('stop-btn');
-                this.uploadBtn = document.getElementById('upload-btn');
-                this.fileInput = document.getElementById('file-input');
-                this.resultContainer = document.getElementById('result-container');
-                this.resultUrl = document.getElementById('result-url');
-                this.errorContainer = document.getElementById('error-container');
-                this.openBtn = document.getElementById('open-btn');
-                this.copyBtn = document.getElementById('copy-btn');
-                
-                this.detectedUrl = null;
-                this.isScanning = false;
-                
-                this.init();
-            }
+        // Attends que ZXing soit chargé
+        window.addEventListener('load', () => {
+            console.log('Page chargée, ZXing:', typeof ZXing);
 
-            init() {
-                this.setupEventListeners();
-                this.registerServiceWorker();
-                this.requestNotificationPermission();
-            }
+            const video = document.getElementById('video');
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const uploadBtn = document.getElementById('upload-btn');
+            const fileInput = document.getElementById('file-input');
+            const resultContainer = document.getElementById('result-container');
+            const resultUrl = document.getElementById('result-url');
+            const errorContainer = document.getElementById('error-container');
+            const openBtn = document.getElementById('open-btn');
+            const copyBtn = document.getElementById('copy-btn');
 
-            setupEventListeners() {
-                this.startBtn.addEventListener('click', () => this.startScanner());
-                this.stopBtn.addEventListener('click', () => this.stopScanner());
-                this.uploadBtn.addEventListener('click', () => this.fileInput.click());
-                this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-                this.openBtn.addEventListener('click', () => this.openUrl());
-                this.copyBtn.addEventListener('click', () => this.copyUrl());
-                
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden && this.isScanning) {
-                        this.stopScanner();
-                    }
-                });
-            }
+            let codeReader = null;
+            let detectedUrl = null;
 
-            async startScanner() {
+            startBtn.addEventListener('click', async () => {
                 try {
-                    this.showError(null);
-                    this.showResult(null);
+                    errorContainer.classList.add('hidden');
+                    resultContainer.classList.add('hidden');
+
+                    codeReader = new ZXing.BrowserQRCodeReader();
                     
-                    this.codeReader = new ZXing.BrowserQRCodeReader();
-                    
-                    await this.codeReader.decodeFromVideoDevice(
+                    await codeReader.decodeFromVideoDevice(
                         undefined,
-                        this.videoElement,
-                        (result, err) => this.handleScanResult(result, err)
+                        video,
+                        (result, err) => {
+                            if (result) {
+                                const url = result.getText().trim();
+                                
+                                // Vérifie que c'est bien theocouerbe.com
+                                try {
+                                    const parsed = new URL(url);
+                                    const host = parsed.hostname.toLowerCase();
+                                    
+                                    if (host === 'theocouerbe.com' || host.endsWith('.theocouerbe.com')) {
+                                        detectedUrl = url;
+                                        resultUrl.textContent = url;
+                                        resultContainer.classList.remove('hidden');
+                                        codeReader.reset();
+                                        startBtn.disabled = false;
+                                        stopBtn.disabled = true;
+                                    } else {
+                                        errorContainer.textContent = '❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.';
+                                        errorContainer.classList.remove('hidden');
+                                    }
+                                } catch (e) {
+                                    errorContainer.textContent = '❌ URL invalide.';
+                                    errorContainer.classList.remove('hidden');
+                                }
+                            }
+                        }
                     );
-                    
-                    this.isScanning = true;
-                    this.startBtn.disabled = true;
-                    this.stopBtn.disabled = false;
-                    
+
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+
                 } catch (error) {
-                    console.error('Erreur caméra:', error);
-                    this.showError('Impossible d\'accéder à la caméra. Autorisez les permissions.');
+                    console.error('Erreur:', error);
+                    errorContainer.textContent = '❌ Impossible d\'accéder à la caméra. Vérifiez les permissions.';
+                    errorContainer.classList.remove('hidden');
+                    startBtn.disabled = false;
                 }
-            }
+            });
 
-            stopScanner() {
-                if (this.codeReader) {
-                    this.codeReader.reset();
-                    this.codeReader = null;
+            stopBtn.addEventListener('click', () => {
+                if (codeReader) {
+                    codeReader.reset();
+                    codeReader = null;
                 }
-                
-                this.isScanning = false;
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                
-                this.videoElement.srcObject = null;
-            }
+                video.srcObject = null;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            });
 
-            handleScanResult(result, err) {
-                if (result) {
-                    const url = result.getText().trim();
-                    
-                    if (this.validateUrl(url)) {
-                        this.detectedUrl = url;
-                        this.showResult(url);
-                        this.stopScanner();
-                    } else {
-                        this.showError('❌ QR code invalide. Seuls les sites theocourbe.com sont autorisés.');
-                    }
-                }
-                
-                if (err && !(err instanceof ZXing.NotFoundException)) {
-                    console.error('Erreur scan:', err);
-                }
-            }
+            uploadBtn.addEventListener('click', () => fileInput.click());
 
-            validateUrl(url) {
-                try {
-                    const parsedUrl = new URL(url);
-                    const hostname = parsedUrl.hostname.toLowerCase();
-                    return hostname === 'theocourbe.com' || hostname.endsWith('.theocourbe.com');
-                } catch (e) {
-                    return false;
-                }
-            }
-
-            async handleFileUpload(event) {
-                const file = event.target.files[0];
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
                 if (!file) return;
-                
+
                 try {
-                    this.showError(null);
-                    this.showResult(null);
-                    
-                    const imageUrl = URL.createObjectURL(file);
+                    errorContainer.classList.add('hidden');
+                    resultContainer.classList.add('hidden');
+
                     const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    
                     await new Promise((resolve) => {
                         img.onload = resolve;
-                        img.src = imageUrl;
+                        img.src = url;
                     });
-                    
-                    const codeReader = new ZXing.BrowserQRCodeReader();
+
                     const canvas = document.createElement('canvas');
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0);
-                    
+
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const result = await codeReader.decodeFromImage(imageData);
-                    
+                    const reader = new ZXing.BrowserQRCodeReader();
+                    const result = await reader.decodeFromImage(imageData);
+
                     if (result && result.getText()) {
                         const url = result.getText().trim();
                         
-                        if (this.validateUrl(url)) {
-                            this.detectedUrl = url;
-                            this.showResult(url);
-                        } else {
-                            this.showError('❌ QR code invalide. Seuls les sites theocourbe.com sont autorisés.');
+                        try {
+                            const parsed = new URL(url);
+                            const host = parsed.hostname.toLowerCase();
+                            
+                            if (host === 'theocouerbe.com' || host.endsWith('.theocouerbe.com')) {
+                                detectedUrl = url;
+                                resultUrl.textContent = url;
+                                resultContainer.classList.remove('hidden');
+                            } else {
+                                errorContainer.textContent = '❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.';
+                                errorContainer.classList.remove('hidden');
+                            }
+                        } catch (e) {
+                            errorContainer.textContent = '❌ URL invalide.';
+                            errorContainer.classList.remove('hidden');
                         }
                     } else {
-                        this.showError('❌ Aucun QR code détecté dans l\'image.');
+                        errorContainer.textContent = '❌ Aucun QR code détecté.';
+                        errorContainer.classList.remove('hidden');
                     }
-                    
-                    URL.revokeObjectURL(imageUrl);
-                    
+
+                    URL.revokeObjectURL(url);
+                    e.target.value = '';
+
                 } catch (error) {
                     console.error('Erreur upload:', error);
-                    this.showError('Erreur lors de la lecture de l\'image.');
+                    errorContainer.textContent = '❌ Erreur lors de la lecture de l\'image.';
+                    errorContainer.classList.remove('hidden');
+                    e.target.value = '';
                 }
-                
-                event.target.value = '';
-            }
+            });
 
-            showResult(url) {
-                if (url) {
-                    this.resultUrl.textContent = url;
-                    this.resultContainer.classList.remove('hidden');
-                } else {
-                    this.resultContainer.classList.add('hidden');
+            openBtn.addEventListener('click', () => {
+                if (detectedUrl) {
+                    window.open(detectedUrl, '_blank');
                 }
-            }
+            });
 
-            showError(message) {
-                if (message) {
-                    this.errorContainer.textContent = message;
-                    this.errorContainer.classList.remove('hidden');
-                } else {
-                    this.errorContainer.classList.add('hidden');
-                }
-            }
-
-            openUrl() {
-                if (this.detectedUrl) {
-                    window.open(this.detectedUrl, '_blank', 'noopener,noreferrer');
-                }
-            }
-
-            async copyUrl() {
-                if (this.detectedUrl) {
+            copyBtn.addEventListener('click', async () => {
+                if (detectedUrl) {
                     try {
-                        await navigator.clipboard.writeText(this.detectedUrl);
-                        this.showError('✅ URL copiée dans le presse-papiers !');
-                    } catch (error) {
-                        console.error('Erreur copie:', error);
-                        this.showError('Impossible de copier l\'URL.');
+                        await navigator.clipboard.writeText(detectedUrl);
+                        alert('✅ URL copiée !');
+                    } catch (e) {
+                        alert('❌ Impossible de copier.');
                     }
                 }
-            }
-
-            async requestNotificationPermission() {
-                if ('Notification' in window) {
-                    try {
-                        await Notification.requestPermission();
-                    } catch (e) {}
-                }
-            }
-
-            async registerServiceWorker() {
-                if ('serviceWorker' in navigator) {
-                    try {
-                        await navigator.serviceWorker.register('/qr_scanner_app/sw.js', { scope: '/qr_scanner_app/' });
-                    } catch (e) {}
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            new QRScannerApp();
+            });
         });
     </script>
 </body>
