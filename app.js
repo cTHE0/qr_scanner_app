@@ -32,7 +32,6 @@ class QRScannerApp {
         this.openBtn.addEventListener('click', () => this.openUrl());
         this.copyBtn.addEventListener('click', () => this.copyUrl());
         
-        // Gestion du scan continu
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.isScanning) {
                 this.stopScanner();
@@ -104,7 +103,6 @@ class QRScannerApp {
             const parsedUrl = new URL(url);
             const hostname = parsedUrl.hostname.toLowerCase();
             
-            // Vérifier que c'est bien theocourbe.com ou un sous-domaine
             return hostname === 'theocourbe.com' || 
                    hostname.endsWith('.theocourbe.com');
         } catch (e) {
@@ -123,7 +121,6 @@ class QRScannerApp {
             const imageUrl = URL.createObjectURL(file);
             const image = await this.loadImage(imageUrl);
             
-            // Utiliser ZXing pour decoder l'image
             const codeReader = new ZXing.BrowserQRCodeReader();
             const result = await codeReader.decodeFromImageElement(image);
             
@@ -148,7 +145,6 @@ class QRScannerApp {
             this.showError('Erreur lors de la lecture de l\'image.');
         }
         
-        // Reset input
         event.target.value = '';
     }
 
@@ -217,7 +213,8 @@ class QRScannerApp {
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                // Chemin ajusté pour le sous-dossier
+                await navigator.serviceWorker.register('/qr_scanner/sw.js', { scope: '/qr_scanner/' });
                 console.log('Service Worker enregistré');
             } catch (error) {
                 console.error('Erreur enregistrement Service Worker:', error);
@@ -226,7 +223,6 @@ class QRScannerApp {
     }
 }
 
-// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
     new QRScannerApp();
 });

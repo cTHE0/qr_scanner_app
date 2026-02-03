@@ -101,12 +101,8 @@ h1 {
 }
 
 @keyframes scan {
-    0% {
-        top: 20%;
-    }
-    100% {
-        top: 80%;
-    }
+    0% { top: 20%; }
+    100% { top: 80%; }
 }
 
 .controls {
