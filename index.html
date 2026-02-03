@@ -301,260 +301,279 @@
         </footer>
     </div>
 
-    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/zxing-browser.min.js"></script>
-    
     <script>
-        class QRScanner {
-            constructor() {
-                this.video = document.getElementById('video');
-                this.scanOverlay = document.getElementById('scan-overlay');
-                this.startBtn = document.getElementById('start-btn');
-                this.stopBtn = document.getElementById('stop-btn');
-                this.uploadBtn = document.getElementById('upload-btn');
-                this.fileInput = document.getElementById('file-input');
-                this.resultContainer = document.getElementById('result-container');
-                this.resultUrl = document.getElementById('result-url');
-                this.errorContainer = document.getElementById('error-container');
-                this.openBtn = document.getElementById('open-btn');
-                this.copyBtn = document.getElementById('copy-btn');
+        // Attente que ZXing soit chargé
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
 
-                this.codeReader = null;
-                this.detectedUrl = null;
-                this.isScanning = false;
+        async function initApp() {
+            try {
+                // Charger ZXing
+                await loadScript('https://unpkg.com/@zxing/library@0.20.0/umd/zxing-browser.min.js');
+                
+                // Maintenant ZXing est disponible
+                class QRScanner {
+                    constructor() {
+                        this.video = document.getElementById('video');
+                        this.scanOverlay = document.getElementById('scan-overlay');
+                        this.startBtn = document.getElementById('start-btn');
+                        this.stopBtn = document.getElementById('stop-btn');
+                        this.uploadBtn = document.getElementById('upload-btn');
+                        this.fileInput = document.getElementById('file-input');
+                        this.resultContainer = document.getElementById('result-container');
+                        this.resultUrl = document.getElementById('result-url');
+                        this.errorContainer = document.getElementById('error-container');
+                        this.openBtn = document.getElementById('open-btn');
+                        this.copyBtn = document.getElementById('copy-btn');
 
-                this.init();
-            }
+                        this.codeReader = null;
+                        this.detectedUrl = null;
+                        this.isScanning = false;
 
-            init() {
-                this.setupEventListeners();
-                this.requestCameraAccess();
-            }
-
-            setupEventListeners() {
-                this.startBtn.addEventListener('click', () => this.startScanner());
-                this.stopBtn.addEventListener('click', () => this.stopScanner());
-                this.uploadBtn.addEventListener('click', () => this.fileInput.click());
-                this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-                this.openBtn.addEventListener('click', () => this.openUrl());
-                this.copyBtn.addEventListener('click', () => this.copyUrl());
-            }
-
-            showPermissionModal() {
-                const modal = document.createElement('div');
-                modal.className = 'permission-modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h2>📷 Accès à la caméra</h2>
-                        <p>Pour scanner des QR codes, nous avons besoin d'accéder à votre caméra.</p>
-                        <div class="loading"></div>
-                        <p style="font-size: 0.9rem; color: #64748b;">
-                            Cliquez sur <strong>Autoriser</strong> dans la fenêtre de permission qui va s'ouvrir.
-                        </p>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-                return modal;
-            }
-
-            hidePermissionModal(modal) {
-                if (modal && modal.parentNode) {
-                    modal.parentNode.removeChild(modal);
-                }
-            }
-
-            async requestCameraAccess() {
-                // Vérifier HTTPS
-                if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-                    this.showError('❌ L\'accès à la caméra nécessite HTTPS. Utilisez https://');
-                    return;
-                }
-
-                const modal = this.showPermissionModal();
-
-                try {
-                    // Demander l'accès à la caméra immédiatement
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    
-                    // Fermer le stream temporairement
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    // Caméra autorisée, masquer le modal
-                    this.hidePermissionModal(modal);
-                    
-                    // Démarrer automatiquement le scanner
-                    setTimeout(() => this.startScanner(), 300);
-
-                } catch (error) {
-                    this.hidePermissionModal(modal);
-                    
-                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                        this.showError('❌ Accès à la caméra refusé. Veuillez autoriser l\'accès.');
-                    } else if (error.name === 'NotFoundError') {
-                        this.showError('❌ Aucune caméra détectée.');
-                    } else if (error.name === 'NotReadableError') {
-                        this.showError('❌ La caméra est déjà utilisée par une autre application.');
-                    } else {
-                        this.showError(`❌ Erreur: ${error.message}`);
+                        this.init();
                     }
-                }
-            }
 
-            async startScanner() {
-                try {
-                    this.clearMessages();
-
-                    this.codeReader = new ZXing.BrowserQRCodeReader();
-                    
-                    await this.codeReader.decodeFromVideoDevice(
-                        undefined,
-                        this.video,
-                        (result, err) => this.handleScanResult(result, err)
-                    );
-
-                    this.video.style.display = 'block';
-                    this.scanOverlay.classList.add('active');
-                    this.startBtn.disabled = true;
-                    this.stopBtn.disabled = false;
-                    this.isScanning = true;
-
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    this.showError(`❌ ${error.message}`);
-                }
-            }
-
-            stopScanner() {
-                if (this.codeReader) {
-                    this.codeReader.reset();
-                    this.codeReader = null;
-                }
-
-                if (this.video.srcObject) {
-                    this.video.srcObject.getTracks().forEach(track => track.stop());
-                    this.video.srcObject = null;
-                }
-
-                this.video.style.display = 'none';
-                this.scanOverlay.classList.remove('active');
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                this.isScanning = false;
-            }
-
-            handleScanResult(result, err) {
-                if (result) {
-                    const url = result.getText().trim();
-
-                    if (this.validateUrl(url)) {
-                        this.detectedUrl = url;
-                        this.showResult(url);
-                        this.stopScanner();
-                    } else {
-                        this.showError('❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.');
+                    init() {
+                        this.setupEventListeners();
+                        this.requestCameraAccess();
                     }
-                }
 
-                if (err && !(err instanceof ZXing.NotFoundException)) {
-                    console.error('Erreur scan:', err);
-                }
-            }
+                    setupEventListeners() {
+                        this.startBtn.addEventListener('click', () => this.startScanner());
+                        this.stopBtn.addEventListener('click', () => this.stopScanner());
+                        this.uploadBtn.addEventListener('click', () => this.fileInput.click());
+                        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+                        this.openBtn.addEventListener('click', () => this.openUrl());
+                        this.copyBtn.addEventListener('click', () => this.copyUrl());
+                    }
 
-            validateUrl(url) {
-                try {
-                    const parsedUrl = new URL(url);
-                    const hostname = parsedUrl.hostname.toLowerCase();
-                    return hostname === 'theocouerbe.com' || hostname.endsWith('.theocouerbe.com');
-                } catch (e) {
-                    return false;
-                }
-            }
+                    showPermissionModal() {
+                        const modal = document.createElement('div');
+                        modal.className = 'permission-modal';
+                        modal.innerHTML = `
+                            <div class="modal-content">
+                                <h2>📷 Accès à la caméra</h2>
+                                <p>Pour scanner des QR codes, nous avons besoin d'accéder à votre caméra.</p>
+                                <div class="loading"></div>
+                                <p style="font-size: 0.9rem; color: #64748b;">
+                                    Cliquez sur <strong>Autoriser</strong> dans la fenêtre de permission qui va s'ouvrir.
+                                </p>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        return modal;
+                    }
 
-            async handleFileUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                try {
-                    this.clearMessages();
-
-                    const imageUrl = URL.createObjectURL(file);
-                    const img = new Image();
-                    
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = reject;
-                        img.src = imageUrl;
-                    });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const codeReader = new ZXing.BrowserQRCodeReader();
-                    const result = await codeReader.decodeFromImage(imageData);
-
-                    if (result && result.getText()) {
-                        const url = result.getText().trim();
-
-                        if (this.validateUrl(url)) {
-                            this.detectedUrl = url;
-                            this.showResult(url);
-                        } else {
-                            this.showError('❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.');
+                    hidePermissionModal(modal) {
+                        if (modal && modal.parentNode) {
+                            modal.parentNode.removeChild(modal);
                         }
-                    } else {
-                        this.showError('❌ Aucun QR code détecté.');
                     }
 
-                    URL.revokeObjectURL(imageUrl);
-                    event.target.value = '';
+                    async requestCameraAccess() {
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                            this.showError('❌ L\'accès à la caméra nécessite HTTPS. Utilisez https://');
+                            return;
+                        }
 
-                } catch (error) {
-                    console.error('Erreur:', error);
-                    this.showError('❌ Erreur lors de la lecture de l\'image.');
-                    event.target.value = '';
-                }
-            }
+                        const modal = this.showPermissionModal();
 
-            showResult(url) {
-                this.resultUrl.textContent = url;
-                this.resultContainer.classList.remove('hidden');
-            }
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                            stream.getTracks().forEach(track => track.stop());
+                            this.hidePermissionModal(modal);
+                            setTimeout(() => this.startScanner(), 300);
 
-            showError(message) {
-                this.errorContainer.textContent = message;
-                this.errorContainer.classList.remove('hidden');
-            }
+                        } catch (error) {
+                            this.hidePermissionModal(modal);
+                            
+                            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                                this.showError('❌ Accès à la caméra refusé. Veuillez autoriser l\'accès.');
+                            } else if (error.name === 'NotFoundError') {
+                                this.showError('❌ Aucune caméra détectée.');
+                            } else if (error.name === 'NotReadableError') {
+                                this.showError('❌ La caméra est déjà utilisée par une autre application.');
+                            } else {
+                                this.showError(`❌ Erreur: ${error.message}`);
+                            }
+                        }
+                    }
 
-            clearMessages() {
-                this.resultContainer.classList.add('hidden');
-                this.errorContainer.classList.add('hidden');
-            }
+                    async startScanner() {
+                        try {
+                            this.clearMessages();
 
-            openUrl() {
-                if (this.detectedUrl) {
-                    window.open(this.detectedUrl, '_blank');
-                }
-            }
+                            this.codeReader = new ZXing.BrowserQRCodeReader();
+                            
+                            await this.codeReader.decodeFromVideoDevice(
+                                undefined,
+                                this.video,
+                                (result, err) => this.handleScanResult(result, err)
+                            );
 
-            async copyUrl() {
-                if (this.detectedUrl) {
-                    try {
-                        await navigator.clipboard.writeText(this.detectedUrl);
-                        this.showError('✅ URL copiée !');
-                        setTimeout(() => this.errorContainer.classList.add('hidden'), 2000);
-                    } catch (e) {
-                        this.showError('❌ Impossible de copier.');
+                            this.video.style.display = 'block';
+                            this.scanOverlay.classList.add('active');
+                            this.startBtn.disabled = true;
+                            this.stopBtn.disabled = false;
+                            this.isScanning = true;
+
+                        } catch (error) {
+                            console.error('Erreur:', error);
+                            this.showError(`❌ ${error.message}`);
+                        }
+                    }
+
+                    stopScanner() {
+                        if (this.codeReader) {
+                            this.codeReader.reset();
+                            this.codeReader = null;
+                        }
+
+                        if (this.video.srcObject) {
+                            this.video.srcObject.getTracks().forEach(track => track.stop());
+                            this.video.srcObject = null;
+                        }
+
+                        this.video.style.display = 'none';
+                        this.scanOverlay.classList.remove('active');
+                        this.startBtn.disabled = false;
+                        this.stopBtn.disabled = true;
+                        this.isScanning = false;
+                    }
+
+                    handleScanResult(result, err) {
+                        if (result) {
+                            const url = result.getText().trim();
+
+                            if (this.validateUrl(url)) {
+                                this.detectedUrl = url;
+                                this.showResult(url);
+                                this.stopScanner();
+                            } else {
+                                this.showError('❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.');
+                            }
+                        }
+
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error('Erreur scan:', err);
+                        }
+                    }
+
+                    validateUrl(url) {
+                        try {
+                            const parsedUrl = new URL(url);
+                            const hostname = parsedUrl.hostname.toLowerCase();
+                            return hostname === 'theocouerbe.com' || hostname.endsWith('.theocouerbe.com');
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
+                    async handleFileUpload(event) {
+                        const file = event.target.files[0];
+                        if (!file) return;
+
+                        try {
+                            this.clearMessages();
+
+                            const imageUrl = URL.createObjectURL(file);
+                            const img = new Image();
+                            
+                            await new Promise((resolve, reject) => {
+                                img.onload = resolve;
+                                img.onerror = reject;
+                                img.src = imageUrl;
+                            });
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const codeReader = new ZXing.BrowserQRCodeReader();
+                            const result = await codeReader.decodeFromImage(imageData);
+
+                            if (result && result.getText()) {
+                                const url = result.getText().trim();
+
+                                if (this.validateUrl(url)) {
+                                    this.detectedUrl = url;
+                                    this.showResult(url);
+                                } else {
+                                    this.showError('❌ QR code invalide. Seuls les sites theocouerbe.com sont autorisés.');
+                                }
+                            } else {
+                                this.showError('❌ Aucun QR code détecté.');
+                            }
+
+                            URL.revokeObjectURL(imageUrl);
+                            event.target.value = '';
+
+                        } catch (error) {
+                            console.error('Erreur:', error);
+                            this.showError('❌ Erreur lors de la lecture de l\'image.');
+                            event.target.value = '';
+                        }
+                    }
+
+                    showResult(url) {
+                        this.resultUrl.textContent = url;
+                        this.resultContainer.classList.remove('hidden');
+                    }
+
+                    showError(message) {
+                        this.errorContainer.textContent = message;
+                        this.errorContainer.classList.remove('hidden');
+                    }
+
+                    clearMessages() {
+                        this.resultContainer.classList.add('hidden');
+                        this.errorContainer.classList.add('hidden');
+                    }
+
+                    openUrl() {
+                        if (this.detectedUrl) {
+                            window.open(this.detectedUrl, '_blank');
+                        }
+                    }
+
+                    async copyUrl() {
+                        if (this.detectedUrl) {
+                            try {
+                                await navigator.clipboard.writeText(this.detectedUrl);
+                                this.showError('✅ URL copiée !');
+                                setTimeout(() => this.errorContainer.classList.add('hidden'), 2000);
+                            } catch (e) {
+                                this.showError('❌ Impossible de copier.');
+                            }
+                        }
                     }
                 }
+
+                // Initialiser l'application
+                new QRScanner();
+
+            } catch (error) {
+                console.error('Erreur chargement ZXing:', error);
+                alert('❌ Erreur lors du chargement de l\'application. Vérifiez votre connexion internet.');
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new QRScanner();
-        });
+        // Démarrer quand le DOM est prêt
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
