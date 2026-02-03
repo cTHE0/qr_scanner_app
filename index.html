@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Scanner QR codes theocourbe.com">
+    <title>QR Scanner - theocourbe.com</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 QR Scanner</h1>
+            <p class="subtitle">Scannez un QR code pour accéder au site</p>
+        </header>
+
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" hidden></canvas>
+            <div class="scan-overlay">
+                <div class="scan-frame"></div>
+                <div class="scan-line"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start-btn" class="btn primary">▶️ Démarrer la caméra</button>
+            <button id="stop-btn" class="btn secondary" disabled>⏹️ Arrêter</button>
+            <button id="upload-btn" class="btn tertiary">📁 Upload une image</button>
+            <input type="file" id="file-input" accept="image/*" hidden>
+        </div>
+
+        <div id="result-container" class="result hidden">
+            <div class="result-content">
+                <h3>✅ QR Code détecté !</h3>
+                <p id="result-url" class="url"></p>
+                <div class="result-actions">
+                    <button id="open-btn" class="btn primary">🌐 Ouvrir le site</button>
+                    <button id="copy-btn" class="btn secondary">📋 Copier</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-container" class="error hidden"></div>
+
+        <footer>
+            <p>🔒 Seuls les sites sur <strong>theocourbe.com</strong> sont autorisés</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/zxing-browser.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

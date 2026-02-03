@@ -1,0 +1,33 @@
+{
+  "name": "QR Scanner - theocourbe.com",
+  "short_name": "QR Scanner",
+  "description": "Application de scan de QR codes pour les sites theocourbe.com",
+  "start_url": "/qr-scanner/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/qr-scanner/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/qr-scanner/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "screenshots": [
+    {
+      "src": "/qr-scanner/screenshot-1.png",
+      "sizes": "384x683",
+      "type": "image/png",
+      "platform": "narrow"
+    }
+  ]
+}
